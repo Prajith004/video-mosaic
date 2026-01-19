@@ -20,18 +20,10 @@ def extract(input_path="input.mp4", output_dir="frames", frame_rate="1/2", size=
     comm = f"""ffmpeg -i {input_path} -vf "fps={frame_rate},scale='if(gte(iw,ih),{size},-1)':'if(gte(iw,ih),-1,{size})':force_original_aspect_ratio=decrease" {output_dir}/frame_%06d.jpg"""
     os.system(comm)
     
-def process_image(img_path, feature_size=8):
+def process_image(img_path):
     img = cv2.imread(img_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # Resize to tiny image to capture "pattern"
-    small = cv2.resize(img, (feature_size, feature_size), interpolation=cv2.INTER_AREA)
-
-    # Flatten into feature vector
-    feature = small.reshape(-1)
-
-    return (os.path.basename(img_path), feature)
-
+    avg_color = cv2.mean(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))[:3]
+    return (os.path.basename(img_path), tuple(map(int, avg_color)))
 
 def map_colors(frames_dir="frames"):
     frame_paths = glob.glob(os.path.join(frames_dir, "*.jpg"))
